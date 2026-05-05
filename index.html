@@ -1,0 +1,2889 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LocalFeather — Lightweight Annotation Tool</title>
+    <meta name="description"
+        content="LocalFeather: A lightweight, privacy-first bounding box annotation tool. Multi-format export. No installation required.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ========== RESET & BASE ========== */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg-primary: #0f1117;
+            --bg-secondary: #1a1d27;
+            --bg-tertiary: #242836;
+            --bg-hover: #2d3244;
+            --bg-active: #363b50;
+            --surface: #1e2230;
+            --border: #2e3348;
+            --border-light: #3d4460;
+            --text-primary: #e8eaf0;
+            --text-secondary: #9ba1b5;
+            --text-muted: #6b7185;
+            --accent: #6c5ce7;
+            --accent-light: #a29bfe;
+            --accent-glow: rgba(108, 92, 231, 0.25);
+            --success: #00b894;
+            --success-bg: rgba(0, 184, 148, 0.12);
+            --warning: #fdcb6e;
+            --warning-bg: rgba(253, 203, 110, 0.12);
+            --danger: #e17055;
+            --danger-bg: rgba(225, 112, 85, 0.12);
+            --info: #74b9ff;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --radius-xl: 20px;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+            --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        /* ========== LAYOUT ========== */
+        .app {
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 16px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            z-index: 100;
+            gap: 8px;
+            flex-wrap: nowrap;
+            min-height: 46px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 34px;
+            height: 34px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-light));
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 2px 8px var(--accent-glow);
+        }
+
+        .logo-text {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .logo-text span {
+            color: var(--accent-light);
+        }
+
+        .header-divider {
+            width: 1px;
+            height: 24px;
+            background: var(--border);
+        }
+
+        .image-counter {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .image-counter strong {
+            color: var(--accent-light);
+        }
+
+        .header-center {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ========== BUTTONS ========== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition);
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--border-light);
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        .btn-icon {
+            font-size: 16px;
+            line-height: 1;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-light);
+            border-color: var(--accent-light);
+        }
+
+        .btn-success {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #00d2a0;
+            border-color: #00d2a0;
+        }
+
+        .btn-danger {
+            border-color: var(--danger);
+            color: var(--danger);
+            background: var(--danger-bg);
+        }
+
+        .btn-danger:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .kbd {
+            display: inline-block;
+            padding: 1px 5px;
+            font-size: 10px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            color: var(--text-muted);
+            font-family: monospace;
+            margin-left: 4px;
+        }
+
+        /* ========== MAIN CONTENT ========== */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            overflow: hidden;
+        }
+
+        .main-content.gallery-visible {
+            grid-template-columns: 240px 1fr 280px;
+        }
+
+        /* ========== CANVAS AREA ========== */
+        .canvas-area {
+            position: relative;
+            overflow: hidden;
+            background: var(--bg-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 0;
+            min-width: 0;
+            height: 100%;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        #imageCanvas {
+            display: block;
+            cursor: crosshair;
+        }
+
+        .canvas-area.drawing #imageCanvas {
+            cursor: crosshair;
+        }
+
+        /* ========== DROP ZONE ========== */
+        .drop-zone {
+            position: absolute;
+            inset: 20px;
+            border: 2px dashed var(--border-light);
+            border-radius: var(--radius-xl);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            transition: all var(--transition);
+            z-index: 10;
+            background: rgba(15, 17, 23, 0.85);
+            backdrop-filter: blur(8px);
+        }
+
+        .drop-zone.hidden {
+            display: none;
+        }
+
+        .drop-zone.drag-over {
+            border-color: var(--accent);
+            background: var(--accent-glow);
+        }
+
+        .drop-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--bg-tertiary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            border: 2px solid var(--border);
+        }
+
+        .drop-zone h2 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .drop-zone p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-align: center;
+            max-width: 360px;
+        }
+
+        .drop-zone .btn {
+            margin-top: 8px;
+        }
+
+        .drop-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* ========== SIDEBAR ========== */
+        .sidebar {
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-section {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+        }
+
+        .sidebar-header .count-badge {
+            background: var(--bg-tertiary);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* ========== CLASSES ========== */
+        .class-list {
+            padding: 0 12px 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .class-chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            border: 1.5px solid var(--border);
+            background: var(--bg-tertiary);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition);
+            color: var(--text-secondary);
+        }
+
+        .class-chip:hover {
+            border-color: var(--border-light);
+            background: var(--bg-hover);
+        }
+
+        .class-chip.active {
+            border-color: var(--accent);
+            background: var(--accent-glow);
+            color: var(--text-primary);
+        }
+
+        .class-color {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .class-delete {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all var(--transition);
+            padding: 0;
+            line-height: 1;
+        }
+
+        .class-delete:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .add-class-row {
+            padding: 0 12px 12px;
+            display: flex;
+            gap: 6px;
+        }
+
+        .add-class-input {
+            flex: 1;
+            padding: 6px 10px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 12px;
+            outline: none;
+            transition: border-color var(--transition);
+        }
+
+        .add-class-input:focus {
+            border-color: var(--accent);
+        }
+
+        .add-class-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* ========== ANNOTATIONS LIST ========== */
+        .annotations-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .annotations-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 8px 8px;
+        }
+
+        .annotations-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .annotations-list::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        .annotation-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 3px;
+            cursor: pointer;
+            transition: all var(--transition);
+            border: 1px solid transparent;
+        }
+
+        .annotation-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .annotation-item.selected {
+            background: var(--accent-glow);
+            border-color: var(--accent);
+        }
+
+        .annotation-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        .annotation-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .annotation-class {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .annotation-coords {
+            font-size: 10px;
+            color: var(--text-muted);
+            font-family: monospace;
+        }
+
+        .annotation-delete {
+            width: 22px;
+            height: 22px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all var(--transition);
+            opacity: 0;
+        }
+
+        .annotation-item:hover .annotation-delete {
+            opacity: 1;
+        }
+
+        .annotation-delete:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .empty-annotations {
+            padding: 24px 16px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .empty-annotations .empty-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+            opacity: 0.5;
+        }
+
+        /* ========== IMAGE THUMBNAILS ========== */
+        .thumbnails-section {
+            border-top: 1px solid var(--border);
+        }
+
+        .thumbnails-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+        }
+
+        .thumbnails-scroll {
+            display: flex;
+            gap: 6px;
+            padding: 0 12px 12px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+        }
+
+        .thumbnails-scroll::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .thumbnails-scroll::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 2px;
+        }
+
+        .thumbnail {
+            width: 52px;
+            height: 52px;
+            border-radius: var(--radius-sm);
+            border: 2px solid var(--border);
+            overflow: hidden;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all var(--transition);
+            position: relative;
+        }
+
+        .thumbnail:hover {
+            border-color: var(--border-light);
+        }
+
+        .thumbnail.active {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-glow);
+        }
+
+        .thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .thumbnail-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: var(--accent);
+            color: white;
+            font-size: 8px;
+            font-weight: 700;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .thumbnail-check {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--success);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            color: white;
+        }
+
+        /* ========== IMAGE FILTER ========== */
+        .filter-bar {
+            display: flex;
+            gap: 4px;
+            padding: 0 12px 8px;
+        }
+
+        .filter-btn {
+            flex: 1;
+            padding: 4px 6px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--bg-tertiary);
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition);
+            text-align: center;
+        }
+
+        .filter-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-secondary);
+        }
+
+        .filter-btn.active {
+            background: var(--accent-glow);
+            border-color: var(--accent);
+            color: var(--accent-light);
+        }
+
+        /* ========== FOOTER / STATUS BAR ========== */
+        .statusbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 16px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .status-left,
+        .status-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--success);
+        }
+
+        /* ========== TOOLTIP ========== */
+        .tooltip-bar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 8px 16px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .tooltip-bar .shortcut {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .tooltip-bar .shortcut .kbd {
+            margin-left: 0;
+            margin-right: 2px;
+        }
+
+        /* ========== MODAL ========== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all var(--transition);
+        }
+
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            min-width: 400px;
+            max-width: 500px;
+            box-shadow: var(--shadow-lg);
+            transform: scale(0.95);
+            transition: transform var(--transition);
+        }
+
+        .modal-overlay.visible .modal {
+            transform: scale(1);
+        }
+
+        .modal h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .modal p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        /* ========== TOAST ========== */
+        .toast-container {
+            position: fixed;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .toast {
+            padding: 10px 20px;
+            border-radius: var(--radius-md);
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            font-size: 13px;
+            font-weight: 500;
+            box-shadow: var(--shadow-md);
+            animation: toast-in 0.3s ease, toast-out 0.3s ease 2.5s forwards;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toast.success {
+            border-color: var(--success);
+        }
+
+        .toast.warning {
+            border-color: var(--warning);
+        }
+
+        .toast.error {
+            border-color: var(--danger);
+        }
+
+        @keyframes toast-in {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes toast-out {
+            from {
+                opacity: 1;
+            }
+
+            to {
+                opacity: 0;
+            }
+        }
+
+        /* ========== ZOOM CONTROLS ========== */
+        .zoom-controls {
+            position: absolute;
+            bottom: 16px;
+            left: 16px;
+            display: flex;
+            gap: 4px;
+            z-index: 50;
+        }
+
+        .zoom-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all var(--transition);
+        }
+
+        .zoom-btn:hover {
+            background: var(--bg-hover);
+        }
+
+        .zoom-level {
+            padding: 0 10px;
+            display: flex;
+            align-items: center;
+            font-size: 11px;
+            color: var(--text-secondary);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+        }
+
+        /* ========== PROGRESS INDICATOR ========== */
+        .progress-bar {
+            height: 3px;
+            background: var(--bg-tertiary);
+            width: 100%;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
+            transition: width 0.4s ease;
+            border-radius: 0 2px 2px 0;
+        }
+
+        /* ========== CROSSHAIR CURSOR OVERLAY ========== */
+        .crosshair-h,
+        .crosshair-v {
+            position: absolute;
+            pointer-events: none;
+            z-index: 20;
+            display: none;
+        }
+
+        .crosshair-h {
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: rgba(108, 92, 231, 0.35);
+        }
+
+        .crosshair-v {
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: rgba(108, 92, 231, 0.35);
+        }
+
+        .canvas-area:hover .crosshair-h,
+        .canvas-area:hover .crosshair-v {
+            display: block;
+        }
+
+        /* ========== ANIMATIONS ========== */
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .saving {
+            animation: pulse 1s infinite;
+        }
+
+        /* ========== GALLERY PANEL (LEFT) ========== */
+        .gallery-panel {
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .gallery-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .gallery-filter {
+            display: flex;
+            gap: 4px;
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .gallery-filter .filter-btn {
+            flex: 1;
+        }
+
+        .gallery-grid {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            align-content: start;
+        }
+
+        .gallery-grid::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .gallery-grid::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        .gallery-item {
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            cursor: pointer;
+            transition: all var(--transition);
+            position: relative;
+            aspect-ratio: 1;
+        }
+
+        .gallery-item:hover {
+            border-color: var(--border-light);
+            transform: scale(1.03);
+        }
+
+        .gallery-item.active {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .gallery-item-name {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 2px 4px;
+            font-size: 8px;
+            font-weight: 500;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.85));
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .gallery-item .gallery-badge {
+            position: absolute;
+            top: 3px;
+            right: 3px;
+            background: var(--accent);
+            color: white;
+            font-size: 9px;
+            font-weight: 700;
+            min-width: 16px;
+            height: 16px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+        }
+
+        .gallery-item .gallery-check {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--success);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            color: white;
+        }
+
+        .gallery-stats {
+            padding: 8px 14px;
+            border-top: 1px solid var(--border);
+            font-size: 10px;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar,
+            .gallery-panel {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app" id="app">
+        <!-- HEADER -->
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <div class="logo-icon">🪶</div>
+                    <div class="logo-text">Local<span>Feather</span></div>
+                </div>
+                <div class="header-divider"></div>
+                <span class="image-counter" id="imageCounter">No images loaded</span>
+            </div>
+            <div class="header-center">
+                <button class="btn btn-sm" id="btnPrev" disabled title="Previous image">
+                    ◀ Prev <span class="kbd">A</span>
+                </button>
+                <button class="btn btn-sm" id="btnNext" disabled title="Next image">
+                    Next ▶ <span class="kbd">D</span>
+                </button>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-sm" id="btnLoadImages" title="Open images from your computer">
+                    Open Images
+                </button>
+                <div class="header-divider"></div>
+                <button class="btn btn-sm" id="btnSessionExport" title="Export session as JSON">
+                    Session ↓
+                </button>
+                <button class="btn btn-sm" id="btnSessionImport" title="Import previous session">
+                    Import
+                </button>
+                <button class="btn btn-sm btn-danger" id="btnSessionClear" title="Reset session">
+                    Reset
+                </button>
+                <div class="header-divider"></div>
+                <button class="btn btn-sm btn-primary" id="btnExport" disabled title="Export annotations">
+                    Export
+                </button>
+            </div>
+        </header>
+
+        <!-- PROGRESS BAR -->
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+
+        <!-- SHORTCUT BAR -->
+        <div class="tooltip-bar" id="tooltipBar">
+            <span class="shortcut"><span class="kbd">Drag</span> Draw box</span>
+            <span class="shortcut"><span class="kbd">Del</span> Delete</span>
+            <span class="shortcut"><span class="kbd">⌘Z</span> Undo</span>
+            <span class="shortcut"><span class="kbd">A/D</span> Prev/Next</span>
+            <span class="shortcut"><span class="kbd">1-9</span> Class</span>
+            <span class="shortcut"><span class="kbd">+/-</span> Zoom</span>
+        </div>
+
+        <!-- MAIN -->
+        <div class="main-content">
+            <!-- Gallery Panel (Left) -->
+            <aside class="gallery-panel" id="galleryPanel" style="display:none;">
+                <div class="gallery-header">
+                    <span>📁 Images</span>
+                    <span class="count-badge" id="galleryCount">0</span>
+                </div>
+                <div class="gallery-filter">
+                    <button class="filter-btn active" data-filter="all" onclick="setImageFilter('all')">All</button>
+                    <button class="filter-btn" data-filter="labeled" onclick="setImageFilter('labeled')">✅
+                        Labeled</button>
+                    <button class="filter-btn" data-filter="unlabeled" onclick="setImageFilter('unlabeled')">⬜
+                        Unlabeled</button>
+                </div>
+                <div class="gallery-grid" id="galleryGrid"></div>
+                <div class="gallery-stats">
+                    <span id="galleryStatsText">No images</span>
+                </div>
+            </aside>
+
+            <!-- Canvas Area -->
+            <div class="canvas-area" id="canvasArea">
+                <!-- Drop Zone -->
+                <div class="drop-zone" id="dropZone">
+                    <div class="drop-icon">🖼️</div>
+                    <h2>Drop Images Here</h2>
+                    <p>Drag and drop your images here, or click the button below to select files.</p>
+                    <button class="btn btn-primary" id="btnDropSelect">
+                        Select from Computer
+                    </button>
+                    <p class="drop-hint">PNG, JPG, JPEG, BMP, WEBP supported • All data stays on your device</p>
+                </div>
+
+                <!-- Canvas -->
+                <div class="canvas-wrapper" id="canvasWrapper" style="display:none;">
+                    <canvas id="imageCanvas"></canvas>
+                </div>
+
+                <!-- Crosshairs -->
+                <div class="crosshair-h" id="crosshairH"></div>
+                <div class="crosshair-v" id="crosshairV"></div>
+
+                <!-- Zoom Controls -->
+                <div class="zoom-controls" style="display:none;" id="zoomControls">
+                    <button class="zoom-btn" id="btnZoomOut" title="Zoom out">−</button>
+                    <span class="zoom-level" id="zoomLevel">100%</span>
+                    <button class="zoom-btn" id="btnZoomIn" title="Zoom in">+</button>
+                    <button class="zoom-btn" id="btnZoomFit" title="Fit">⊝</button>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <aside class="sidebar" id="sidebar">
+                <!-- Classes Section -->
+                <div class="sidebar-section">
+                    <div class="sidebar-header">
+                        Classes
+                        <span class="count-badge" id="classCount">0</span>
+                    </div>
+                    <div class="class-list" id="classList"></div>
+                    <div class="add-class-row">
+                        <input type="text" class="add-class-input" id="addClassInput" placeholder="New class name..."
+                            maxlength="40">
+                        <button class="btn btn-sm btn-primary" id="btnAddClass">Add</button>
+                    </div>
+                </div>
+
+                <!-- Annotations Section -->
+                <div class="sidebar-section annotations-section">
+                    <div class="sidebar-header">
+                        Annotations
+                        <span class="count-badge" id="annotationCount">0</span>
+                    </div>
+                    <div class="annotations-list" id="annotationsList">
+                        <div class="empty-annotations">
+                            <div class="empty-icon">🏷️</div>
+                            <div>No annotations yet.<br>Draw a box to start labeling.</div>
+                        </div>
+                    </div>
+                    <div style="padding:8px 12px; border-top:1px solid var(--border); display:flex; gap:6px;">
+                        <button class="btn btn-sm btn-danger" id="btnClearAnnotations" disabled style="flex:1">
+                            Clear All
+                        </button>
+                        <button class="btn btn-sm" id="btnUndoAnnotation" disabled style="flex:1">
+                            Undo
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Thumbnails moved to left Gallery Panel -->
+            </aside>
+        </div>
+
+        <!-- Status Bar -->
+        <footer class="statusbar">
+            <div class="status-left">
+                <span class="status-item">
+                    <span class="status-dot"></span>
+                    All data stays local — nothing is sent to any server
+                </span>
+                <span class="status-item" id="statusExif" style="display:none;">EXIF: —</span>
+            </div>
+            <div class="status-right">
+                <span class="status-item" id="statusCoords">X: — Y: —</span>
+                <span class="status-item" id="statusImageSize">—</span>
+                <span class="status-item" id="statusMode">Ready</span>
+                <span class="status-item" style="opacity:0.5">v5.0</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- File Input (hidden) -->
+    <input type="file" id="fileInput" accept="image/*" multiple style="display:none">
+    <input type="file" id="fileInputMore" accept="image/*" multiple style="display:none">
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Export Modal -->
+    <div class="modal-overlay" id="exportModal">
+        <div class="modal">
+            <h3>💾 Export Annotations</h3>
+            <p>Export your labels in multiple formats. All data stays on your device.</p>
+            <div
+                style="background:var(--bg-primary);border-radius:var(--radius-sm);padding:12px;margin-bottom:12px;font-size:12px;font-family:monospace;color:var(--text-secondary);">
+                <div><strong>YOLO:</strong> labels/ → classes.txt + per-image .txt</div>
+                <div style="margin-top:4px"><strong>JSON:</strong> annotations.json → structured with metadata</div>
+                <div style="margin-top:4px"><strong>COCO:</strong> coco_annotations.json → COCO detection format</div>
+                <div style="margin-top:4px"><strong>VOC:</strong> voc/ → Pascal VOC XML per image</div>
+                <div style="margin-top:4px"><strong>CSV:</strong> annotations.csv → spreadsheet-friendly</div>
+            </div>
+            <div id="exportStats" style="font-size:12px;color:var(--text-secondary);margin-bottom:16px;"></div>
+            <div class="modal-actions" style="flex-wrap:wrap;gap:6px;">
+                <button class="btn" id="btnCancelExport">Cancel</button>
+                <button class="btn" id="btnExportCSV" style="border-color:var(--warning);color:var(--warning);">📊
+                    CSV</button>
+                <button class="btn" id="btnExportVOC" style="border-color:#55efc4;color:#55efc4;">📝 VOC</button>
+                <button class="btn" id="btnExportCOCO" style="border-color:var(--info);color:var(--info);">🏷️
+                    COCO</button>
+                <button class="btn btn-primary" id="btnExportJSON">📋 JSON</button>
+                <button class="btn btn-success" id="btnConfirmExport">📥 YOLO</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Session Import File Input (hidden) -->
+    <input type="file" id="sessionFileInput" accept=".json" style="display:none">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script>
+        /* ═══════════════════════════════════════════════════════
+           LocalFeather — Full Application Logic
+           ═══════════════════════════════════════════════════════ */
+
+        // ───── COLOR PALETTE FOR CLASSES ─────
+        const CLASS_COLORS = [
+            '#6c5ce7', '#00b894', '#e17055', '#74b9ff', '#fdcb6e',
+            '#fd79a8', '#00cec9', '#a29bfe', '#fab1a0', '#55efc4',
+            '#ff7675', '#0984e3', '#e84393', '#2d3436', '#636e72',
+            '#d63031', '#f39c12', '#27ae60', '#8e44ad', '#2980b9'
+        ];
+
+        // ───── STATE ─────
+        const STORAGE_KEY = 'localfeather_session';
+        const state = {
+            images: [],           // { file, name, dataUrl, width, height, exifOrientation }
+            currentIndex: -1,
+            classes: [],          // ['class_name', ...]
+            activeClassIndex: 0,
+            annotations: {},      // { imageName: [{classIndex, x, y, w, h}, ...] }
+            undoStack: {},        // { imageName: [annotation_snapshots] }
+            selectedAnnotation: -1,
+            isDrawing: false,
+            isResizing: false,    // drag-to-resize state
+            resizeHandle: null,   // which corner is being dragged
+            resizeAnn: null,      // annotation being resized
+            resizeOriginal: null, // original annotation before resize
+            drawStart: null,
+            drawCurrent: null,
+            zoom: 1,
+            pan: { x: 0, y: 0 },
+            imageFilter: 'all',   // 'all' | 'labeled' | 'unlabeled'
+            _savedCurrentIndex: -1, // stored index from session for restore
+        };
+
+        // ───── DOM REFS ─────
+        const $ = id => document.getElementById(id);
+        const canvas = $('imageCanvas');
+        const ctx = canvas.getContext('2d');
+        const canvasArea = $('canvasArea');
+        const canvasWrapper = $('canvasWrapper');
+        const dropZone = $('dropZone');
+        const fileInput = $('fileInput');
+        const fileInputMore = $('fileInputMore');
+
+        // ───── LOCALSTORAGE PERSISTENCE ─────
+        function saveSession() {
+            try {
+                const data = {
+                    classes: state.classes,
+                    activeClassIndex: state.activeClassIndex,
+                    annotations: state.annotations,
+                    currentIndex: state.currentIndex,
+                    imageFilter: state.imageFilter,
+                    savedAt: new Date().toISOString(),
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+                updateSaveIndicator(true);
+            } catch (e) {
+                console.warn('Session save failed:', e);
+            }
+        }
+
+        function restoreSession() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return false;
+                const data = JSON.parse(raw);
+                if (data.classes && data.classes.length > 0) {
+                    state.classes = data.classes;
+                    state.activeClassIndex = data.activeClassIndex || 0;
+                }
+                if (data.annotations) {
+                    state.annotations = data.annotations;
+                }
+                if (data.imageFilter) {
+                    state.imageFilter = data.imageFilter;
+                }
+                // Store saved currentIndex for restoring after images load
+                if (typeof data.currentIndex === 'number' && data.currentIndex >= 0) {
+                    state._savedCurrentIndex = data.currentIndex;
+                }
+                console.log('Session restored from', data.savedAt);
+                return true;
+            } catch (e) {
+                console.warn('Session restore failed:', e);
+                return false;
+            }
+        }
+
+        function clearSession() {
+            localStorage.removeItem(STORAGE_KEY);
+            updateSaveIndicator(false);
+        }
+
+        function updateSaveIndicator(saved) {
+            const el = $('saveIndicator');
+            if (!el) return;
+            if (saved) {
+                el.innerHTML = 'Saved';
+                el.style.color = 'var(--success)';
+            } else {
+                el.innerHTML = 'Unsaved';
+                el.style.color = 'var(--warning)';
+            }
+        }
+
+        function exportSession() {
+            const data = {
+                classes: state.classes,
+                annotations: state.annotations,
+                activeClassIndex: state.activeClassIndex,
+                exportedAt: new Date().toISOString(),
+                version: '2.0'
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `localfeather_session_${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('Session file downloaded', 'success');
+        }
+
+        function importSession(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.classes) {
+                        state.classes = data.classes;
+                        state.activeClassIndex = data.activeClassIndex || 0;
+                    }
+                    if (data.annotations) {
+                        // Merge annotations — don't overwrite existing
+                        for (const key in data.annotations) {
+                            if (!state.annotations[key] || state.annotations[key].length === 0) {
+                                state.annotations[key] = data.annotations[key];
+                            }
+                        }
+                    }
+                    saveSession();
+                    renderClassList();
+                    drawCanvas();
+                    renderAnnotationsList();
+                    updateUI();
+                    showToast('Session imported successfully!', 'success');
+                } catch (err) {
+                    showToast('Invalid session file: ' + err.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // ───── EXIF ORIENTATION PARSER ─────
+        function getExifOrientation(file) {
+            return new Promise((resolve) => {
+                if (!file || !file.type.match(/image\/jpe?g/i)) {
+                    resolve(1); // Non-JPEG — no EXIF
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const view = new DataView(e.target.result);
+                    // Check JPEG SOI marker
+                    if (view.getUint16(0, false) !== 0xFFD8) { resolve(1); return; }
+                    let offset = 2;
+                    const length = view.byteLength;
+                    while (offset < length) {
+                        if (view.getUint16(offset, false) === 0xFFE1) {
+                            // APP1 marker — EXIF
+                            const exifStart = offset + 4;
+                            // Check for "Exif\0\0"
+                            if (view.getUint32(exifStart, false) !== 0x45786966) { resolve(1); return; }
+                            const tiffStart = exifStart + 6;
+                            const bigEndian = view.getUint16(tiffStart, false) === 0x4D4D;
+                            const ifdOffset = view.getUint32(tiffStart + 4, bigEndian);
+                            const numEntries = view.getUint16(tiffStart + ifdOffset, bigEndian);
+                            for (let i = 0; i < numEntries; i++) {
+                                const entryOffset = tiffStart + ifdOffset + 2 + (i * 12);
+                                if (view.getUint16(entryOffset, bigEndian) === 0x0112) {
+                                    // Orientation tag found
+                                    resolve(view.getUint16(entryOffset + 8, bigEndian));
+                                    return;
+                                }
+                            }
+                            resolve(1); return;
+                        } else {
+                            const markerLen = view.getUint16(offset + 2, false);
+                            offset += 2 + markerLen;
+                        }
+                    }
+                    resolve(1);
+                };
+                reader.onerror = () => resolve(1);
+                // Only read first 64KB — EXIF is always at the start
+                reader.readAsArrayBuffer(file.slice(0, 65536));
+            });
+        }
+
+        function applyExifOrientation(img, orientation) {
+            // Returns a new canvas with the image correctly oriented
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const w = img.naturalWidth;
+            const h = img.naturalHeight;
+
+            // Orientations 5-8 swap width/height
+            if (orientation >= 5 && orientation <= 8) {
+                canvas.width = h;
+                canvas.height = w;
+            } else {
+                canvas.width = w;
+                canvas.height = h;
+            }
+
+            switch (orientation) {
+                case 2: ctx.transform(-1, 0, 0, 1, w, 0); break;       // Horizontal flip
+                case 3: ctx.transform(-1, 0, 0, -1, w, h); break;      // Rotate 180°
+                case 4: ctx.transform(1, 0, 0, -1, 0, h); break;       // Vertical flip
+                case 5: ctx.transform(0, 1, 1, 0, 0, 0); break;        // Rot 90 CW + flip
+                case 6: ctx.transform(0, 1, -1, 0, h, 0); break;       // Rotate 90° CW
+                case 7: ctx.transform(0, -1, -1, 0, h, w); break;      // Rot 90 CCW + flip
+                case 8: ctx.transform(0, -1, 1, 0, 0, w); break;       // Rotate 90° CCW
+                default: break; // orientation 1 — no transform
+            }
+
+            ctx.drawImage(img, 0, 0);
+
+            // Create a new image from the corrected canvas
+            const correctedImg = new Image();
+            correctedImg.src = canvas.toDataURL('image/jpeg', 0.95);
+            return { correctedImg, correctedCanvas: canvas, width: canvas.width, height: canvas.height };
+        }
+
+        // ───── IMAGE LOADING (with EXIF support) ─────
+        function loadImageFile(file) {
+            return new Promise(async (resolve) => {
+                const orientation = await getExifOrientation(file);
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        if (orientation > 1) {
+                            // Apply EXIF correction
+                            const { correctedImg, width, height } = applyExifOrientation(img, orientation);
+                            let resolved = false; // Guard against double-resolve
+                            const doResolve = () => {
+                                if (resolved) return;
+                                resolved = true;
+                                resolve({
+                                    file,
+                                    name: file.name,
+                                    dataUrl: correctedImg.src,
+                                    width: width,
+                                    height: height,
+                                    img: correctedImg,
+                                    exifOrientation: orientation
+                                });
+                            };
+                            correctedImg.onload = doResolve;
+                            // If already loaded (data URL is sync for small images)
+                            if (correctedImg.complete && correctedImg.naturalWidth > 0) {
+                                doResolve();
+                            }
+                        } else {
+                            resolve({
+                                file,
+                                name: file.name,
+                                dataUrl: e.target.result,
+                                width: img.naturalWidth,
+                                height: img.naturalHeight,
+                                img,
+                                exifOrientation: 1
+                            });
+                        }
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function handleFiles(files, append = false) {
+            const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+            if (imageFiles.length === 0) {
+                showToast('No supported image files found.', 'warning');
+                return;
+            }
+
+            showToast(`Loading ${imageFiles.length} images... (checking EXIF)`, 'info');
+            const loaded = await Promise.all(imageFiles.map(loadImageFile));
+
+            if (append) {
+                state.images.push(...loaded);
+            } else {
+                state.images = loaded;
+            }
+
+            // Initialize annotations for new images, restore from session if available
+            loaded.forEach(img => {
+                if (!state.annotations[img.name]) {
+                    state.annotations[img.name] = [];
+                    state.undoStack[img.name] = [];
+                }
+            });
+
+            // Count how many had saved annotations from previous session
+            let restoredCount = 0;
+            loaded.forEach(img => {
+                if (state.annotations[img.name] && state.annotations[img.name].length > 0) {
+                    restoredCount++;
+                }
+            });
+
+            if (!append || state.currentIndex < 0) {
+                // Restore doctor's last viewed image if we have a valid saved index
+                if (state._savedCurrentIndex >= 0 && state._savedCurrentIndex < state.images.length) {
+                    state.currentIndex = state._savedCurrentIndex;
+                    state._savedCurrentIndex = -1; // Used once
+                } else {
+                    state.currentIndex = 0;
+                }
+            }
+
+            // Check EXIF corrections
+            const exifCorrected = loaded.filter(img => img.exifOrientation > 1).length;
+
+            dropZone.classList.add('hidden');
+            canvasWrapper.style.display = 'block';
+            $('zoomControls').style.display = 'flex';
+            $('galleryPanel').style.display = 'flex';
+
+            let msg = `${loaded.length} images loaded. Total: ${state.images.length}`;
+            if (exifCorrected > 0) msg += ` (${exifCorrected} EXIF corrected)`;
+            if (restoredCount > 0) msg += ` (${restoredCount} previous labels restored)`;
+            showToast(msg, 'success');
+
+            saveSession();
+            renderCurrentImage();
+            renderThumbnails();
+            updateUI();
+        }
+
+        // ───── RENDERING ─────
+        function renderCurrentImage() {
+            if (state.currentIndex < 0 || state.currentIndex >= state.images.length) return;
+
+            const imgData = state.images[state.currentIndex];
+            const areaRect = canvasArea.getBoundingClientRect();
+            const maxW = areaRect.width - 40;
+            const maxH = areaRect.height - 40;
+
+            // Fit image
+            let scale = Math.min(maxW / imgData.width, maxH / imgData.height, 1);
+            state.zoom = scale;
+
+            const displayW = Math.floor(imgData.width * state.zoom);
+            const displayH = Math.floor(imgData.height * state.zoom);
+
+            canvas.width = displayW;
+            canvas.height = displayH;
+            canvas.style.width = displayW + 'px';
+            canvas.style.height = displayH + 'px';
+
+            drawCanvas();
+            updateZoomDisplay();
+        }
+
+        function drawCanvas() {
+            if (state.currentIndex < 0) return;
+            const imgData = state.images[state.currentIndex];
+            const w = canvas.width;
+            const h = canvas.height;
+
+            ctx.clearRect(0, 0, w, h);
+
+            // Draw image
+            ctx.drawImage(imgData.img, 0, 0, w, h);
+
+            // Draw existing annotations
+            const annots = state.annotations[imgData.name] || [];
+            annots.forEach((ann, i) => {
+                const color = CLASS_COLORS[ann.classIndex % CLASS_COLORS.length];
+                const sx = ann.x * w;
+                const sy = ann.y * h;
+                const sw = ann.w * w;
+                const sh = ann.h * h;
+
+                // Fill
+                ctx.fillStyle = color + '22';
+                ctx.fillRect(sx, sy, sw, sh);
+
+                // Border
+                ctx.strokeStyle = color;
+                ctx.lineWidth = i === state.selectedAnnotation ? 3 : 2;
+                if (i === state.selectedAnnotation) {
+                    ctx.setLineDash([6, 3]);
+                } else {
+                    ctx.setLineDash([]);
+                }
+                ctx.strokeRect(sx, sy, sw, sh);
+                ctx.setLineDash([]);
+
+                // Label
+                const label = state.classes[ann.classIndex] || `class_${ann.classIndex}`;
+                ctx.font = 'bold 12px Inter, sans-serif';
+                const textW = ctx.measureText(label).width;
+                const labelH = 18;
+                const labelY = sy > labelH + 2 ? sy - labelH - 2 : sy;
+                ctx.fillStyle = color;
+                ctx.fillRect(sx, labelY, textW + 10, labelH);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText(label, sx + 5, labelY + 13);
+
+                // Corner handles for selected (functional — drag to resize)
+                if (i === state.selectedAnnotation) {
+                    const handleSize = 8;
+                    ctx.fillStyle = color;
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 1;
+                    const corners = [
+                        [sx, sy], [sx + sw, sy],
+                        [sx, sy + sh], [sx + sw, sy + sh]
+                    ];
+                    corners.forEach(([cx, cy]) => {
+                        ctx.fillRect(cx - handleSize / 2, cy - handleSize / 2, handleSize, handleSize);
+                        ctx.strokeRect(cx - handleSize / 2, cy - handleSize / 2, handleSize, handleSize);
+                    });
+                    // Mid-edge handles
+                    const midHandleSize = 6;
+                    const midPoints = [
+                        [sx + sw / 2, sy],           // top-mid
+                        [sx + sw / 2, sy + sh],      // bottom-mid
+                        [sx, sy + sh / 2],           // left-mid
+                        [sx + sw, sy + sh / 2]       // right-mid
+                    ];
+                    ctx.fillStyle = color + 'cc';
+                    midPoints.forEach(([mx, my]) => {
+                        ctx.fillRect(mx - midHandleSize / 2, my - midHandleSize / 2, midHandleSize, midHandleSize);
+                    });
+                }
+            });
+
+            // Draw current drawing bbox
+            if (state.isDrawing && state.drawStart && state.drawCurrent) {
+                const color = CLASS_COLORS[state.activeClassIndex % CLASS_COLORS.length];
+                const sx = Math.min(state.drawStart.x, state.drawCurrent.x);
+                const sy = Math.min(state.drawStart.y, state.drawCurrent.y);
+                const sw = Math.abs(state.drawCurrent.x - state.drawStart.x);
+                const sh = Math.abs(state.drawCurrent.y - state.drawStart.y);
+
+                ctx.fillStyle = color + '18';
+                ctx.fillRect(sx, sy, sw, sh);
+
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.setLineDash([8, 4]);
+                ctx.strokeRect(sx, sy, sw, sh);
+                ctx.setLineDash([]);
+
+                // Dimension label
+                const actW = Math.round(sw / state.zoom);
+                const actH = Math.round(sh / state.zoom);
+                ctx.font = '11px monospace';
+                ctx.fillStyle = color;
+                const dimText = `${actW}×${actH}`;
+                ctx.fillText(dimText, sx + 4, sy + sh + 14);
+            }
+        }
+
+        // ───── MOUSE EVENTS ON CANVAS ─────
+        function getCanvasPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            };
+        }
+
+        // ───── RESIZE HANDLE DETECTION ─────
+        function getResizeHandle(pos) {
+            if (state.selectedAnnotation < 0) return null;
+            const imgData = state.images[state.currentIndex];
+            const ann = (state.annotations[imgData.name] || [])[state.selectedAnnotation];
+            if (!ann) return null;
+
+            const sx = ann.x * canvas.width;
+            const sy = ann.y * canvas.height;
+            const sw = ann.w * canvas.width;
+            const sh = ann.h * canvas.height;
+            const threshold = 8;
+
+            // Corner handles: tl, tr, bl, br
+            const handles = [
+                { name: 'tl', x: sx, y: sy },
+                { name: 'tr', x: sx + sw, y: sy },
+                { name: 'bl', x: sx, y: sy + sh },
+                { name: 'br', x: sx + sw, y: sy + sh },
+                // Mid-edge handles: tm, bm, ml, mr
+                { name: 'tm', x: sx + sw / 2, y: sy },
+                { name: 'bm', x: sx + sw / 2, y: sy + sh },
+                { name: 'ml', x: sx, y: sy + sh / 2 },
+                { name: 'mr', x: sx + sw, y: sy + sh / 2 },
+            ];
+
+            for (const h of handles) {
+                if (Math.abs(pos.x - h.x) <= threshold && Math.abs(pos.y - h.y) <= threshold) {
+                    return h.name;
+                }
+            }
+            return null;
+        }
+
+        function getResizeCursor(handle) {
+            const cursors = {
+                tl: 'nwse-resize', br: 'nwse-resize',
+                tr: 'nesw-resize', bl: 'nesw-resize',
+                tm: 'ns-resize', bm: 'ns-resize',
+                ml: 'ew-resize', mr: 'ew-resize',
+            };
+            return cursors[handle] || 'crosshair';
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return;
+            if (state.classes.length === 0) {
+                showToast('Please add at least one class first!', 'warning');
+                return;
+            }
+
+            const pos = getCanvasPos(e);
+
+            // Check if clicking on a resize handle of selected annotation
+            const handle = getResizeHandle(pos);
+            if (handle && state.selectedAnnotation >= 0) {
+                const imgData = state.images[state.currentIndex];
+                const ann = state.annotations[imgData.name][state.selectedAnnotation];
+                state.isResizing = true;
+                state.resizeHandle = handle;
+                state.resizeOriginal = { ...ann };
+                pushUndo(imgData.name);
+                canvas.style.cursor = getResizeCursor(handle);
+                $('statusMode').textContent = 'Resizing...';
+                return;
+            }
+
+            // Check if clicking on existing annotation
+            const imgData = state.images[state.currentIndex];
+            const annots = state.annotations[imgData.name] || [];
+            let clickedIdx = -1;
+
+            for (let i = annots.length - 1; i >= 0; i--) {
+                const ann = annots[i];
+                const sx = ann.x * canvas.width;
+                const sy = ann.y * canvas.height;
+                const sw = ann.w * canvas.width;
+                const sh = ann.h * canvas.height;
+                if (pos.x >= sx && pos.x <= sx + sw && pos.y >= sy && pos.y <= sy + sh) {
+                    clickedIdx = i;
+                    break;
+                }
+            }
+
+            if (clickedIdx >= 0 && !e.shiftKey) {
+                state.selectedAnnotation = clickedIdx;
+                drawCanvas();
+                renderAnnotationsList();
+                return;
+            }
+
+            // Start drawing
+            state.isDrawing = true;
+            state.drawStart = pos;
+            state.drawCurrent = pos;
+            state.selectedAnnotation = -1;
+            canvasArea.classList.add('drawing');
+            $('statusMode').textContent = 'Drawing...';
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            const pos = getCanvasPos(e);
+
+            // Update crosshairs
+            const areaRect = canvasArea.getBoundingClientRect();
+            $('crosshairH').style.top = (e.clientY - areaRect.top) + 'px';
+            $('crosshairV').style.left = (e.clientX - areaRect.left) + 'px';
+
+            // Update status coords
+            const realX = Math.round(pos.x / state.zoom);
+            const realY = Math.round(pos.y / state.zoom);
+            $('statusCoords').textContent = `X: ${realX}  Y: ${realY}`;
+
+            // Resize handle cursor
+            if (!state.isDrawing && !state.isResizing) {
+                const handle = getResizeHandle(pos);
+                canvas.style.cursor = handle ? getResizeCursor(handle) : 'crosshair';
+            }
+
+            // Handle resizing
+            if (state.isResizing && state.selectedAnnotation >= 0) {
+                const imgData = state.images[state.currentIndex];
+                const ann = state.annotations[imgData.name][state.selectedAnnotation];
+                const orig = state.resizeOriginal;
+                const nx = pos.x / canvas.width;  // normalized mouse pos
+                const ny = pos.y / canvas.height;
+
+                // Compute new bbox based on which handle is being dragged
+                let x1 = orig.x, y1 = orig.y;
+                let x2 = orig.x + orig.w, y2 = orig.y + orig.h;
+
+                switch (state.resizeHandle) {
+                    case 'tl': x1 = nx; y1 = ny; break;
+                    case 'tr': x2 = nx; y1 = ny; break;
+                    case 'bl': x1 = nx; y2 = ny; break;
+                    case 'br': x2 = nx; y2 = ny; break;
+                    case 'tm': y1 = ny; break;
+                    case 'bm': y2 = ny; break;
+                    case 'ml': x1 = nx; break;
+                    case 'mr': x2 = nx; break;
+                }
+
+                // Ensure min size and correct order
+                ann.x = Math.min(x1, x2);
+                ann.y = Math.min(y1, y2);
+                ann.w = Math.max(Math.abs(x2 - x1), 5 / canvas.width);
+                ann.h = Math.max(Math.abs(y2 - y1), 5 / canvas.height);
+
+                drawCanvas();
+                return;
+            }
+
+            if (state.isDrawing) {
+                state.drawCurrent = pos;
+                drawCanvas();
+            }
+        });
+
+        canvas.addEventListener('mouseup', (e) => {
+            // Finish resize
+            if (state.isResizing) {
+                state.isResizing = false;
+                state.resizeHandle = null;
+                state.resizeOriginal = null;
+                canvas.style.cursor = 'crosshair';
+                $('statusMode').textContent = 'Ready';
+                drawCanvas();
+                renderAnnotationsList();
+                updateUI();
+                saveSession();
+                showToast('Annotation resized', 'success');
+                return;
+            }
+
+            if (!state.isDrawing) return;
+            state.isDrawing = false;
+            canvasArea.classList.remove('drawing');
+            $('statusMode').textContent = 'Ready';
+
+            const pos = getCanvasPos(e);
+            const sx = Math.min(state.drawStart.x, pos.x);
+            const sy = Math.min(state.drawStart.y, pos.y);
+            const sw = Math.abs(pos.x - state.drawStart.x);
+            const sh = Math.abs(pos.y - state.drawStart.y);
+
+            // Minimum size check
+            if (sw < 5 || sh < 5) {
+                state.drawStart = null;
+                state.drawCurrent = null;
+                drawCanvas();
+                return;
+            }
+
+            const imgData = state.images[state.currentIndex];
+
+            // Save undo
+            pushUndo(imgData.name);
+
+            // Add annotation (normalized)
+            if (!state.annotations[imgData.name]) state.annotations[imgData.name] = [];
+            state.annotations[imgData.name].push({
+                classIndex: state.activeClassIndex,
+                x: sx / canvas.width,
+                y: sy / canvas.height,
+                w: sw / canvas.width,
+                h: sh / canvas.height
+            });
+
+            // Auto-select the newly created annotation so user can immediately change class
+            state.selectedAnnotation = state.annotations[imgData.name].length - 1;
+
+            state.drawStart = null;
+            state.drawCurrent = null;
+
+            drawCanvas();
+            renderAnnotationsList();
+            updateUI();
+            saveSession();
+
+            showToast(`"${state.classes[state.activeClassIndex]}" label added`, 'success');
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            $('crosshairH').style.display = 'none';
+            $('crosshairV').style.display = 'none';
+        });
+
+        canvas.addEventListener('mouseenter', () => {
+            $('crosshairH').style.display = '';
+            $('crosshairV').style.display = '';
+        });
+
+        // ───── UNDO ─────
+        function pushUndo(imageName) {
+            if (!state.undoStack[imageName]) state.undoStack[imageName] = [];
+            state.undoStack[imageName].push(JSON.parse(JSON.stringify(state.annotations[imageName] || [])));
+            // Limit stack
+            if (state.undoStack[imageName].length > 50) state.undoStack[imageName].shift();
+        }
+
+        function undo() {
+            if (state.currentIndex < 0) return;
+            const imgName = state.images[state.currentIndex].name;
+            const stack = state.undoStack[imgName];
+            if (!stack || stack.length === 0) {
+                showToast('Nothing to undo', 'warning');
+                return;
+            }
+            state.annotations[imgName] = stack.pop();
+            state.selectedAnnotation = -1;
+            drawCanvas();
+            renderAnnotationsList();
+            updateUI();
+            saveSession();
+            showToast('Undone', 'success');
+        }
+
+        // ───── CLASSES ─────
+        function addClass(name) {
+            name = name.trim().replace(/[<>"'&]/g, ''); // sanitize
+            if (!name) return;
+            if (state.classes.includes(name)) {
+                showToast('This class already exists', 'warning');
+                return;
+            }
+            state.classes.push(name);
+            state.activeClassIndex = state.classes.length - 1;
+            $('addClassInput').value = '';
+            renderClassList();
+            updateUI();
+            saveSession();
+            showToast(`"${name}" class added`, 'success');
+        }
+
+        function removeClass(index) {
+            if (state.classes.length <= 1) {
+                showToast('At least one class is required', 'warning');
+                return;
+            }
+            state.classes.splice(index, 1);
+            // Update annotations
+            for (const key in state.annotations) {
+                state.annotations[key] = state.annotations[key].filter(a => a.classIndex !== index)
+                    .map(a => ({
+                        ...a,
+                        classIndex: a.classIndex > index ? a.classIndex - 1 : a.classIndex
+                    }));
+            }
+            if (state.activeClassIndex >= state.classes.length) {
+                state.activeClassIndex = state.classes.length - 1;
+            }
+            renderClassList();
+            drawCanvas();
+            renderAnnotationsList();
+            updateUI();
+            saveSession();
+        }
+
+        function renderClassList() {
+            const container = $('classList');
+            container.innerHTML = state.classes.map((cls, i) => {
+                const color = CLASS_COLORS[i % CLASS_COLORS.length];
+                const active = i === state.activeClassIndex ? 'active' : '';
+                return `
+                <div class="class-chip ${active}" data-index="${i}" onclick="selectClass(${i})">
+                    <span class="class-color" style="background:${color}"></span>
+                    ${cls.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+                    <span class="kbd">${i < 9 ? i + 1 : ''}</span>
+                    <button class="class-delete" onclick="event.stopPropagation(); removeClass(${i})" title="Delete">✕</button>
+                </div>
+            `;
+            }).join('');
+            $('classCount').textContent = state.classes.length;
+        }
+
+        function selectClass(index) {
+            state.activeClassIndex = index;
+            // If an annotation is selected, update its class too
+            if (state.selectedAnnotation >= 0 && state.currentIndex >= 0) {
+                const imgName = state.images[state.currentIndex].name;
+                const annots = state.annotations[imgName] || [];
+                if (annots[state.selectedAnnotation]) {
+                    pushUndo(imgName);
+                    annots[state.selectedAnnotation].classIndex = index;
+                    drawCanvas();
+                    renderAnnotationsList();
+                    showToast(`Annotation updated → "${state.classes[index]}"`, 'success');
+                }
+            }
+            renderClassList();
+            saveSession();
+        }
+
+        $('btnAddClass').addEventListener('click', () => addClass($('addClassInput').value));
+        $('addClassInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') addClass($('addClassInput').value);
+        });
+
+        // ───── ANNOTATIONS LIST ─────
+        function renderAnnotationsList() {
+            const container = $('annotationsList');
+            if (state.currentIndex < 0) {
+                container.innerHTML = '<div class="empty-annotations"><div class="empty-icon">🏷️</div><div>No annotations yet.</div></div>';
+                return;
+            }
+
+            const imgName = state.images[state.currentIndex].name;
+            const annots = state.annotations[imgName] || [];
+
+            if (annots.length === 0) {
+                container.innerHTML = '<div class="empty-annotations"><div class="empty-icon">🏷️</div><div>No annotations yet.<br>Draw a box to start labeling.</div></div>';
+            } else {
+                container.innerHTML = annots.map((ann, i) => {
+                    const color = CLASS_COLORS[ann.classIndex % CLASS_COLORS.length];
+                    const cls = state.classes[ann.classIndex] || `class_${ann.classIndex}`;
+                    const selected = i === state.selectedAnnotation ? 'selected' : '';
+                    const imgData = state.images[state.currentIndex];
+                    const px = Math.round(ann.x * imgData.width);
+                    const py = Math.round(ann.y * imgData.height);
+                    const pw = Math.round(ann.w * imgData.width);
+                    const ph = Math.round(ann.h * imgData.height);
+                    return `
+                    <div class="annotation-item ${selected}" onclick="selectAnnotation(${i})">
+                        <span class="annotation-color" style="background:${color}"></span>
+                        <div class="annotation-info">
+                            <div class="annotation-class">${cls}</div>
+                            <div class="annotation-coords">${px},${py} → ${px + pw},${py + ph}</div>
+                        </div>
+                        <button class="annotation-delete" onclick="event.stopPropagation(); deleteAnnotation(${i})" title="Delete">✕</button>
+                    </div>
+                `;
+                }).join('');
+            }
+
+            $('annotationCount').textContent = annots.length;
+            $('btnClearAnnotations').disabled = annots.length === 0;
+            $('btnUndoAnnotation').disabled = !(state.undoStack[imgName] && state.undoStack[imgName].length > 0);
+        }
+
+        function selectAnnotation(index) {
+            state.selectedAnnotation = index;
+            drawCanvas();
+            renderAnnotationsList();
+        }
+
+        function deleteAnnotation(index) {
+            const imgName = state.images[state.currentIndex].name;
+            pushUndo(imgName);
+            state.annotations[imgName].splice(index, 1);
+            state.selectedAnnotation = -1;
+            drawCanvas();
+            renderAnnotationsList();
+            updateUI();
+            saveSession();
+            showToast('Annotation deleted', 'success');
+        }
+
+        // ───── IMAGE FILTER ─────
+        function setImageFilter(filter) {
+            state.imageFilter = filter;
+            // Update filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.filter === filter);
+            });
+            renderThumbnails();
+            saveSession();
+        }
+
+        // ───── THUMBNAILS ─────
+        function renderThumbnails() {
+            const container = $('galleryGrid');
+            if (!container) return;
+            const filteredIndices = [];
+            state.images.forEach((img, i) => {
+                const count = (state.annotations[img.name] || []).length;
+                if (state.imageFilter === 'labeled' && count === 0) return;
+                if (state.imageFilter === 'unlabeled' && count > 0) return;
+                filteredIndices.push(i);
+            });
+
+            container.innerHTML = filteredIndices.map(i => {
+                const img = state.images[i];
+                const active = i === state.currentIndex ? 'active' : '';
+                const count = (state.annotations[img.name] || []).length;
+                const shortName = img.name.length > 14 ? img.name.substring(0, 12) + '…' : img.name;
+                return `
+                <div class="gallery-item ${active}" id="gal-${i}" onclick="goToImage(${i})" title="${img.name}">
+                    <img src="${img.dataUrl}" alt="">
+                    ${count > 0 ? `<span class="gallery-badge">${count}</span>` : ''}
+                    ${count > 0 ? '<span class="gallery-check">✓</span>' : ''}
+                    <span class="gallery-item-name">${shortName}</span>
+                </div>
+            `;
+            }).join('');
+
+            // Count stats
+            let labeledCount = 0;
+            state.images.forEach(img => {
+                if ((state.annotations[img.name] || []).length > 0) labeledCount++;
+            });
+            $('galleryCount').textContent = `${filteredIndices.length}/${state.images.length}`;
+            $('galleryStatsText').textContent = `${labeledCount} labeled / ${state.images.length} total`;
+
+            // Scroll active into view
+            requestAnimationFrame(() => {
+                const activeEl = document.getElementById(`gal-${state.currentIndex}`);
+                if (activeEl) {
+                    activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            });
+        }
+
+        function goToImage(index) {
+            if (index < 0 || index >= state.images.length) return;
+            state.currentIndex = index;
+            state.selectedAnnotation = -1;
+            renderCurrentImage();
+            renderThumbnails();
+            renderAnnotationsList();
+            updateUI();
+        }
+
+        // ───── NAVIGATION ─────
+        $('btnPrev').addEventListener('click', () => goToImage(state.currentIndex - 1));
+        $('btnNext').addEventListener('click', () => goToImage(state.currentIndex + 1));
+
+        // ───── FILE LOADING ─────
+        $('btnLoadImages').addEventListener('click', () => fileInput.click());
+        $('btnDropSelect').addEventListener('click', () => fileInput.click());
+        // Smart append: if images already loaded, new files append; otherwise replace
+        fileInput.addEventListener('change', (e) => {
+            const append = state.images.length > 0;
+            handleFiles(e.target.files, append);
+            e.target.value = ''; // Allow re-selecting same files
+        });
+
+        // ───── DRAG AND DROP ─────
+        const dz = dropZone;
+        const ca = canvasArea;
+
+        ['dragenter', 'dragover'].forEach(evt => {
+            ca.addEventListener(evt, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!dz.classList.contains('hidden')) {
+                    dz.classList.add('drag-over');
+                }
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(evt => {
+            ca.addEventListener(evt, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dz.classList.remove('drag-over');
+            });
+        });
+
+        ca.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const append = state.images.length > 0;
+            handleFiles(e.dataTransfer.files, append);
+        });
+
+        // Prevent default drag on window
+        window.addEventListener('dragover', (e) => e.preventDefault());
+        window.addEventListener('drop', (e) => e.preventDefault());
+
+        // ───── ZOOM ─────
+        function zoomTo(newZoom) {
+            const imgData = state.images[state.currentIndex];
+            if (!imgData) return;
+            state.zoom = Math.max(0.1, Math.min(5, newZoom));
+            const w = Math.floor(imgData.width * state.zoom);
+            const h = Math.floor(imgData.height * state.zoom);
+            canvas.width = w;
+            canvas.height = h;
+            canvas.style.width = w + 'px';
+            canvas.style.height = h + 'px';
+            drawCanvas();
+            updateZoomDisplay();
+        }
+
+        function updateZoomDisplay() {
+            $('zoomLevel').textContent = Math.round(state.zoom * 100) + '%';
+        }
+
+        $('btnZoomIn').addEventListener('click', () => zoomTo(state.zoom * 1.15));
+        $('btnZoomOut').addEventListener('click', () => zoomTo(state.zoom / 1.15));
+        $('btnZoomFit').addEventListener('click', () => renderCurrentImage());
+
+        // Mouse wheel zoom
+        canvasArea.addEventListener('wheel', (e) => {
+            if (state.images.length === 0) return;
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? 0.9 : 1.1;
+            zoomTo(state.zoom * delta);
+        }, { passive: false });
+
+        // ───── CLEAR ALL ANNOTATIONS FOR CURRENT IMAGE ─────
+        $('btnClearAnnotations').addEventListener('click', () => {
+            if (state.currentIndex < 0) return;
+            const imgName = state.images[state.currentIndex].name;
+            pushUndo(imgName);
+            state.annotations[imgName] = [];
+            state.selectedAnnotation = -1;
+            drawCanvas();
+            renderAnnotationsList();
+            updateUI();
+            saveSession();
+            showToast('All annotations cleared', 'success');
+        });
+
+        $('btnUndoAnnotation').addEventListener('click', undo);
+
+        // ───── KEYBOARD SHORTCUTS ─────
+        document.addEventListener('keydown', (e) => {
+            // Don't trigger shortcuts if typing in input
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            const key = e.key.toLowerCase();
+
+            // Navigation
+            if (key === 'a' || key === 'arrowleft') { goToImage(state.currentIndex - 1); e.preventDefault(); }
+            if (key === 'd' || key === 'arrowright') { goToImage(state.currentIndex + 1); e.preventDefault(); }
+
+            // Class selection (1-9) — also updates selected annotation
+            if (key >= '1' && key <= '9') {
+                const idx = parseInt(key) - 1;
+                if (idx < state.classes.length) {
+                    selectClass(idx);
+                    if (state.selectedAnnotation < 0) {
+                        showToast(`Class: "${state.classes[idx]}" selected`, 'success');
+                    }
+                }
+            }
+
+            // Delete
+            if (key === 'delete' || key === 'backspace') {
+                if (state.selectedAnnotation >= 0) {
+                    e.preventDefault();
+                    deleteAnnotation(state.selectedAnnotation);
+                }
+            }
+
+            // Undo
+            if ((e.ctrlKey || e.metaKey) && key === 'z') {
+                e.preventDefault();
+                undo();
+            }
+
+            // Zoom
+            if (key === '=' || key === '+') { zoomTo(state.zoom * 1.15); e.preventDefault(); }
+            if (key === '-') { zoomTo(state.zoom / 1.15); e.preventDefault(); }
+        });
+
+        // ───── EXPORT ─────
+        $('btnExport').addEventListener('click', () => {
+            // Calculate stats
+            let totalAnnotations = 0;
+            let labeledImages = 0;
+            state.images.forEach(img => {
+                const count = (state.annotations[img.name] || []).length;
+                totalAnnotations += count;
+                if (count > 0) labeledImages++;
+            });
+
+            const hasLabels = labeledImages > 0;
+
+            $('exportStats').innerHTML = `
+            <div style="display:flex;gap:20px;flex-wrap:wrap;">
+                <span>📊 Total: <strong>${state.images.length}</strong> images</span>
+                <span>✅ Labeled: <strong>${labeledImages}</strong></span>
+                <span>🏷️ Annotations: <strong>${totalAnnotations}</strong></span>
+                <span>📦 Classes: <strong>${state.classes.length}</strong></span>
+            </div>
+            ${!hasLabels ? '<div style="color:var(--warning);margin-top:8px;">⚠️ No labeled images found — please annotate first.</div>' : ''}
+        `;
+
+            // Disable export buttons if no labeled images
+            $('btnConfirmExport').disabled = !hasLabels;
+            $('btnExportJSON').disabled = !hasLabels;
+            $('btnExportCOCO').disabled = !hasLabels;
+            $('btnExportVOC').disabled = !hasLabels;
+            $('btnExportCSV').disabled = !hasLabels;
+
+            $('exportModal').classList.add('visible');
+        });
+
+        $('btnCancelExport').addEventListener('click', () => {
+            $('exportModal').classList.remove('visible');
+        });
+
+        $('btnConfirmExport').addEventListener('click', () => {
+            exportYOLO();
+            $('exportModal').classList.remove('visible');
+        });
+
+        $('btnExportJSON').addEventListener('click', () => {
+            exportJSON();
+            $('exportModal').classList.remove('visible');
+        });
+
+        $('btnExportCOCO').addEventListener('click', () => {
+            exportCOCO();
+            $('exportModal').classList.remove('visible');
+        });
+
+        $('btnExportVOC').addEventListener('click', () => {
+            exportVOC();
+            $('exportModal').classList.remove('visible');
+        });
+
+        $('btnExportCSV').addEventListener('click', () => {
+            exportCSV();
+            $('exportModal').classList.remove('visible');
+        });
+
+        // ───── SESSION BUTTONS ─────
+        $('btnSessionExport').addEventListener('click', exportSession);
+        $('btnSessionImport').addEventListener('click', () => $('sessionFileInput').click());
+        $('sessionFileInput').addEventListener('change', (e) => {
+            if (e.target.files[0]) importSession(e.target.files[0]);
+            e.target.value = '';
+        });
+        $('btnSessionClear').addEventListener('click', () => {
+            if (confirm('All session data (classes and annotations) will be deleted. Are you sure?')) {
+                clearSession();
+                state.classes = [];
+                state.annotations = {};
+                state.undoStack = {};
+                // Re-seed defaults
+                ['melanoma', 'dysplastic', 'banal', 'keratinocytic', 'seborrheic_keratosis', 'basal_cell_carcinoma', 'vascular'].forEach(cls => {
+                    state.classes.push(cls);
+                });
+                state.activeClassIndex = 0;
+                renderClassList();
+                drawCanvas();
+                renderAnnotationsList();
+                updateUI();
+                showToast('Session reset', 'success');
+            }
+        });
+
+        async function exportYOLO() {
+            const zip = new JSZip();
+            const labelsFolder = zip.folder('labels');
+
+            // classes.txt
+            labelsFolder.file('classes.txt', state.classes.join('\n'));
+
+            // Per-image label files
+            let labeledCount = 0;
+            state.images.forEach(img => {
+                const annots = state.annotations[img.name] || [];
+                if (annots.length === 0) return;
+                labeledCount++;
+
+                // YOLO format: class_id center_x center_y width height (all normalized 0-1)
+                const lines = annots.map(ann => {
+                    const cx = ann.x + ann.w / 2;
+                    const cy = ann.y + ann.h / 2;
+                    return `${ann.classIndex} ${cx.toFixed(6)} ${cy.toFixed(6)} ${ann.w.toFixed(6)} ${ann.h.toFixed(6)}`;
+                });
+
+                const baseName = img.name.replace(/\.[^.]+$/, '');
+                labelsFolder.file(`${baseName}.txt`, lines.join('\n'));
+            });
+
+            if (labeledCount === 0) {
+                showToast('No labeled images found.', 'warning');
+                return;
+            }
+
+            // data.yaml
+            const yaml = `# YOLO Dataset Configuration\n# Generated by LocalFeather\n# Date: ${new Date().toLocaleDateString()}\n\npath: ./dataset\ntrain: train/images\nval: val/images\n\nnames:\n${state.classes.map((c, i) => `  ${i}: ${c}`).join('\n')}\n`;
+            zip.file('data.yaml', yaml);
+
+            // README
+            const readme = `LocalFeather - YOLO Export\n==========================\nDate: ${new Date().toLocaleString()}\nTotal images: ${state.images.length}\nLabeled images: ${labeledCount}\nClasses: ${state.classes.join(', ')}\n\nUsage:\n1. Copy labels/ to dataset/train/labels/ or dataset/val/labels/\n2. Copy images to dataset/train/images/ or dataset/val/images/\n3. Place data.yaml in root directory\n4. Train: yolo task=detect mode=train model=yolov8n.pt data=data.yaml epochs=50\n`;
+            zip.file('README.txt', readme);
+
+            // Generate and download ZIP
+            showToast('Generating ZIP file...', 'info');
+            try {
+                const content = await zip.generateAsync({ type: 'blob' });
+                const url = URL.createObjectURL(content);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `localfeather_labels_${new Date().toISOString().slice(0, 10)}.zip`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast(`✅ ${labeledCount} images exported as YOLO ZIP!`, 'success');
+            } catch (err) {
+                showToast('ZIP creation error: ' + err.message, 'error');
+            }
+        }
+
+        // ───── JSON EXPORT ─────
+        function exportJSON() {
+            const output = {
+                version: '2.0',
+                exportedAt: new Date().toISOString(),
+                tool: 'LocalFeather',
+                classes: state.classes.map((name, index) => ({ index, name })),
+                images: []
+            };
+
+            let labeledCount = 0;
+            state.images.forEach(img => {
+                const annots = state.annotations[img.name] || [];
+                if (annots.length === 0) return;
+                labeledCount++;
+
+                output.images.push({
+                    filename: img.name,
+                    width: img.width,
+                    height: img.height,
+                    exifOrientation: img.exifOrientation || 1,
+                    exifCorrected: (img.exifOrientation || 1) > 1,
+                    annotations: annots.map(ann => ({
+                        className: state.classes[ann.classIndex] || `class_${ann.classIndex}`,
+                        classIndex: ann.classIndex,
+                        // Normalized (0-1) — same as YOLO
+                        normalized: {
+                            x: ann.x,
+                            y: ann.y,
+                            w: ann.w,
+                            h: ann.h,
+                            cx: ann.x + ann.w / 2,
+                            cy: ann.y + ann.h / 2
+                        },
+                        // Pixel coordinates — easier for processing
+                        pixels: {
+                            x1: Math.round(ann.x * img.width),
+                            y1: Math.round(ann.y * img.height),
+                            x2: Math.round((ann.x + ann.w) * img.width),
+                            y2: Math.round((ann.y + ann.h) * img.height),
+                            width: Math.round(ann.w * img.width),
+                            height: Math.round(ann.h * img.height)
+                        }
+                    }))
+                });
+            });
+
+            if (labeledCount === 0) {
+                showToast('No labeled images found.', 'warning');
+                return;
+            }
+
+            output.summary = {
+                totalImages: state.images.length,
+                labeledImages: labeledCount,
+                totalAnnotations: output.images.reduce((sum, img) => sum + img.annotations.length, 0),
+                classCount: state.classes.length
+            };
+
+            const blob = new Blob([JSON.stringify(output, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `localfeather_annotations_${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast(`✅ ${labeledCount} images exported as JSON!`, 'success');
+        }
+
+        // ───── COCO EXPORT ─────
+        function exportCOCO() {
+            const coco = {
+                info: {
+                    description: 'LocalFeather COCO Export',
+                    version: '1.0',
+                    year: new Date().getFullYear(),
+                    date_created: new Date().toISOString()
+                },
+                licenses: [{ id: 1, name: 'Unknown', url: '' }],
+                categories: state.classes.map((name, i) => ({
+                    id: i, name: name, supercategory: 'lesion'
+                })),
+                images: [],
+                annotations: []
+            };
+
+            let annId = 1;
+            let imgId = 1;
+            let labeledCount = 0;
+
+            state.images.forEach(img => {
+                const annots = state.annotations[img.name] || [];
+                if (annots.length === 0) return;
+                labeledCount++;
+
+                const cocoImg = {
+                    id: imgId,
+                    file_name: img.name,
+                    width: img.width,
+                    height: img.height
+                };
+                coco.images.push(cocoImg);
+
+                annots.forEach(ann => {
+                    const x = Math.round(ann.x * img.width);
+                    const y = Math.round(ann.y * img.height);
+                    const w = Math.round(ann.w * img.width);
+                    const h = Math.round(ann.h * img.height);
+                    coco.annotations.push({
+                        id: annId++,
+                        image_id: imgId,
+                        category_id: ann.classIndex,
+                        bbox: [x, y, w, h],
+                        area: w * h,
+                        iscrowd: 0,
+                        segmentation: []
+                    });
+                });
+                imgId++;
+            });
+
+            if (labeledCount === 0) {
+                showToast('No labeled images found.', 'warning');
+                return;
+            }
+
+            const blob = new Blob([JSON.stringify(coco, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `coco_annotations_${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast(`✅ ${labeledCount} images exported as COCO format!`, 'success');
+        }
+
+        // ───── PASCAL VOC (XML) EXPORT ─────
+        async function exportVOC() {
+            const zip = new JSZip();
+            const vocFolder = zip.folder('voc');
+            let labeledCount = 0;
+
+            state.images.forEach(img => {
+                const annots = state.annotations[img.name] || [];
+                if (annots.length === 0) return;
+                labeledCount++;
+
+                const w = img.width;
+                const h = img.height;
+                const baseName = img.name.replace(/\.[^.]+$/, '');
+
+                let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+                xml += `<annotation>\n`;
+                xml += `  <folder>images</folder>\n`;
+                xml += `  <filename>${img.name}</filename>\n`;
+                xml += `  <source>\n    <database>LocalFeather</database>\n  </source>\n`;
+                xml += `  <size>\n    <width>${w}</width>\n    <height>${h}</height>\n    <depth>3</depth>\n  </size>\n`;
+                xml += `  <segmented>0</segmented>\n`;
+
+                annots.forEach(ann => {
+                    const className = state.classes[ann.classIndex] || `class_${ann.classIndex}`;
+                    const xmin = Math.round(ann.x * w);
+                    const ymin = Math.round(ann.y * h);
+                    const xmax = Math.round((ann.x + ann.w) * w);
+                    const ymax = Math.round((ann.y + ann.h) * h);
+
+                    xml += `  <object>\n`;
+                    xml += `    <name>${className}</name>\n`;
+                    xml += `    <pose>Unspecified</pose>\n`;
+                    xml += `    <truncated>0</truncated>\n`;
+                    xml += `    <difficult>0</difficult>\n`;
+                    xml += `    <bndbox>\n`;
+                    xml += `      <xmin>${xmin}</xmin>\n`;
+                    xml += `      <ymin>${ymin}</ymin>\n`;
+                    xml += `      <xmax>${xmax}</xmax>\n`;
+                    xml += `      <ymax>${ymax}</ymax>\n`;
+                    xml += `    </bndbox>\n`;
+                    xml += `  </object>\n`;
+                });
+
+                xml += `</annotation>\n`;
+                vocFolder.file(`${baseName}.xml`, xml);
+            });
+
+            if (labeledCount === 0) {
+                showToast('No labeled images found.', 'warning');
+                return;
+            }
+
+            showToast('Generating VOC ZIP...', 'info');
+            try {
+                const content = await zip.generateAsync({ type: 'blob' });
+                const url = URL.createObjectURL(content);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `voc_annotations_${new Date().toISOString().slice(0, 10)}.zip`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast(`✅ ${labeledCount} images exported as Pascal VOC XML!`, 'success');
+            } catch (err) {
+                showToast('VOC export error: ' + err.message, 'error');
+            }
+        }
+
+        // ───── CSV EXPORT ─────
+        function exportCSV() {
+            const rows = [['image', 'class', 'class_index', 'x_min', 'y_min', 'x_max', 'y_max', 'width_px', 'height_px', 'img_width', 'img_height']];
+            let labeledCount = 0;
+
+            state.images.forEach(img => {
+                const annots = state.annotations[img.name] || [];
+                if (annots.length === 0) return;
+                labeledCount++;
+
+                annots.forEach(ann => {
+                    const className = state.classes[ann.classIndex] || `class_${ann.classIndex}`;
+                    const xmin = Math.round(ann.x * img.width);
+                    const ymin = Math.round(ann.y * img.height);
+                    const xmax = Math.round((ann.x + ann.w) * img.width);
+                    const ymax = Math.round((ann.y + ann.h) * img.height);
+                    rows.push([
+                        img.name, className, ann.classIndex,
+                        xmin, ymin, xmax, ymax,
+                        xmax - xmin, ymax - ymin,
+                        img.width, img.height
+                    ]);
+                });
+            });
+
+            if (labeledCount === 0) {
+                showToast('No labeled images found.', 'warning');
+                return;
+            }
+
+            const csv = rows.map(r => r.join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `annotations_${new Date().toISOString().slice(0, 10)}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast(`✅ ${labeledCount} images exported as CSV (${rows.length - 1} annotations)!`, 'success');
+        }
+
+        // ───── UI UPDATE ─────
+        function updateUI() {
+            const hasImages = state.images.length > 0;
+            $('btnPrev').disabled = !hasImages || state.currentIndex <= 0;
+            $('btnNext').disabled = !hasImages || state.currentIndex >= state.images.length - 1;
+            $('btnExport').disabled = !hasImages || state.classes.length === 0;
+
+            if (hasImages) {
+                const img = state.images[state.currentIndex];
+                let labeled = 0;
+                state.images.forEach(i => {
+                    if ((state.annotations[i.name] || []).length > 0) labeled++;
+                });
+                $('imageCounter').innerHTML = `Image <strong>${state.currentIndex + 1}</strong> / <strong>${state.images.length}</strong> — ${img.name} <span style="color:var(--success);font-size:11px;">(${labeled} labeled)</span>`;
+                $('statusImageSize').textContent = `${img.width} × ${img.height} px`;
+
+                // EXIF status
+                const exifEl = $('statusExif');
+                if (img.exifOrientation && img.exifOrientation > 1) {
+                    exifEl.style.display = '';
+                    exifEl.textContent = `📐 EXIF: ${img.exifOrientation} (düzeltildi)`;
+                    exifEl.style.color = 'var(--warning)';
+                } else {
+                    exifEl.style.display = '';
+                    exifEl.textContent = '📐 EXIF: OK';
+                    exifEl.style.color = 'var(--success)';
+                }
+            }
+
+            // Progress bar
+            if (hasImages) {
+                let labeled = 0;
+                state.images.forEach(img => {
+                    if ((state.annotations[img.name] || []).length > 0) labeled++;
+                });
+                const pct = (labeled / state.images.length * 100).toFixed(0);
+                $('progressFill').style.width = pct + '%';
+            }
+        }
+
+        // ───── TOAST ─────
+        function showToast(message, type = 'info') {
+            const container = $('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const icons = { success: '✅', warning: '⚠️', error: '❌', info: 'ℹ️' };
+            toast.innerHTML = `${icons[type] || ''} ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // ───── WINDOW RESIZE ─────
+        window.addEventListener('resize', () => {
+            if (state.images.length > 0) renderCurrentImage();
+        });
+
+        // ───── INIT ─────
+        // Restore session from localStorage first
+        const sessionRestored = restoreSession();
+
+        if (!sessionRestored || state.classes.length === 0) {
+            // Pre-seed with default dataset classes only if no saved session
+            const defaultClasses = [
+                'melanoma',
+                'dysplastic',
+                'banal',
+                'keratinocytic',
+                'seborrheic_keratosis',
+                'basal_cell_carcinoma',
+                'vascular'
+            ];
+            defaultClasses.forEach(cls => {
+                if (!state.classes.includes(cls)) state.classes.push(cls);
+            });
+            state.activeClassIndex = 0;
+        }
+
+        renderClassList();
+        renderAnnotationsList();
+
+        if (sessionRestored) {
+            const annotCount = Object.values(state.annotations).reduce((sum, arr) => sum + arr.length, 0);
+            showToast(`Previous session restored: ${state.classes.length} classes, ${annotCount} annotations`, 'success');
+        }
+
+        // Restore filter buttons from session
+        if (state.imageFilter && state.imageFilter !== 'all') {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.filter === state.imageFilter);
+            });
+        }
+
+        console.log('LocalFeather v5.0 initialized. All data stays local. 🪶🔒');
+        console.log('Classes:', state.classes);
+        console.log('Session restored:', sessionRestored);
+    </script>
+</body>
+
+</html>
