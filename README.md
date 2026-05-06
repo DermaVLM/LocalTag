@@ -8,7 +8,7 @@ Zero-install, runs entirely in your browser. All data stays on your device — n
 
 ## ✨ Features
 
-- **Zero Installation** — Just open `index.html` in any modern browser
+- **Zero Installation** — Just open `LocalTag.html` in any modern browser
 - **Privacy-First** — All data stays local, no server, no cloud
 - **Multi-Format Export** — YOLO, COCO JSON, Pascal VOC XML, CSV, raw JSON
 - **Session Persistence** — Auto-saves to localStorage; resume anytime
@@ -22,7 +22,7 @@ Zero-install, runs entirely in your browser. All data stays on your device — n
 ## 🚀 Quick Start
 
 1. Download or clone this repository
-2. Open `index.html` in your browser
+2. Open `LocalTag.html` in your browser
 3. Click **Open Images** or drag & drop your images
 4. Draw bounding boxes, assign classes, export
 
@@ -31,7 +31,7 @@ Zero-install, runs entirely in your browser. All data stays on your device — n
 git clone https://github.com/DermaVLM/LocalTag.git
 
 # Open
-open LocalTag/index.html
+open LocalTag/LocalTag.html
 ```
 
 ## 📦 Export Formats
