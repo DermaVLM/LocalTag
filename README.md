@@ -1,10 +1,10 @@
-# 🪶 LocalFeather
+# 🏷️ LocalTag
 
 **A lightweight, privacy-first bounding box annotation tool.**
 
 Zero-install, runs entirely in your browser. All data stays on your device — nothing is sent to any server.
 
-![LocalFeather Screenshot](https://img.shields.io/badge/version-v5.0-blue) ![License](https://img.shields.io/badge/license-MIT-green) ![Platform](https://img.shields.io/badge/platform-browser-orange)
+![LocalTag Screenshot](https://img.shields.io/badge/version-v5.0-blue) ![License](https://img.shields.io/badge/license-MIT-green) ![Platform](https://img.shields.io/badge/platform-browser-orange)
 
 ## ✨ Features
 
@@ -28,10 +28,10 @@ Zero-install, runs entirely in your browser. All data stays on your device — n
 
 ```bash
 # Clone
-git clone https://github.com/DermaVLM/LocalFeather.git
+git clone https://github.com/DermaVLM/LocalTag.git
 
 # Open
-open LocalFeather/index.html
+open LocalTag/index.html
 ```
 
 ## 📦 Export Formats
