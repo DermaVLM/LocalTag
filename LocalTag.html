@@ -1478,36 +1478,51 @@
                 }
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    const view = new DataView(e.target.result);
-                    // Check JPEG SOI marker
-                    if (view.getUint16(0, false) !== 0xFFD8) { resolve(1); return; }
-                    let offset = 2;
-                    const length = view.byteLength;
-                    while (offset < length) {
-                        if (view.getUint16(offset, false) === 0xFFE1) {
-                            // APP1 marker — EXIF
-                            const exifStart = offset + 4;
-                            // Check for "Exif\0\0"
-                            if (view.getUint32(exifStart, false) !== 0x45786966) { resolve(1); return; }
-                            const tiffStart = exifStart + 6;
-                            const bigEndian = view.getUint16(tiffStart, false) === 0x4D4D;
-                            const ifdOffset = view.getUint32(tiffStart + 4, bigEndian);
-                            const numEntries = view.getUint16(tiffStart + ifdOffset, bigEndian);
-                            for (let i = 0; i < numEntries; i++) {
-                                const entryOffset = tiffStart + ifdOffset + 2 + (i * 12);
-                                if (view.getUint16(entryOffset, bigEndian) === 0x0112) {
-                                    // Orientation tag found
-                                    resolve(view.getUint16(entryOffset + 8, bigEndian));
-                                    return;
+                    try {
+                        const view = new DataView(e.target.result);
+                        const length = view.byteLength;
+                        // Check JPEG SOI marker
+                        if (length < 4 || view.getUint16(0, false) !== 0xFFD8) { resolve(1); return; }
+                        let offset = 2;
+                        while (offset + 4 < length) {
+                            const marker = view.getUint16(offset, false);
+                            if (marker === 0xFFE1) {
+                                // APP1 marker — EXIF
+                                const exifStart = offset + 4;
+                                if (exifStart + 10 >= length) { resolve(1); return; }
+                                // Check for "Exif\0\0"
+                                if (view.getUint32(exifStart, false) !== 0x45786966) { resolve(1); return; }
+                                const tiffStart = exifStart + 6;
+                                if (tiffStart + 8 >= length) { resolve(1); return; }
+                                const bigEndian = view.getUint16(tiffStart, false) === 0x4D4D;
+                                const ifdOffset = view.getUint32(tiffStart + 4, bigEndian);
+                                if (tiffStart + ifdOffset + 2 >= length) { resolve(1); return; }
+                                const numEntries = view.getUint16(tiffStart + ifdOffset, bigEndian);
+                                for (let i = 0; i < numEntries; i++) {
+                                    const entryOffset = tiffStart + ifdOffset + 2 + (i * 12);
+                                    if (entryOffset + 10 >= length) break;
+                                    if (view.getUint16(entryOffset, bigEndian) === 0x0112) {
+                                        // Orientation tag found
+                                        resolve(view.getUint16(entryOffset + 8, bigEndian));
+                                        return;
+                                    }
                                 }
+                                resolve(1); return;
+                            } else if ((marker & 0xFF00) !== 0xFF00) {
+                                // Invalid marker — stop parsing
+                                resolve(1); return;
+                            } else {
+                                if (offset + 4 >= length) { resolve(1); return; }
+                                const markerLen = view.getUint16(offset + 2, false);
+                                if (markerLen < 2) { resolve(1); return; } // Invalid length
+                                offset += 2 + markerLen;
                             }
-                            resolve(1); return;
-                        } else {
-                            const markerLen = view.getUint16(offset + 2, false);
-                            offset += 2 + markerLen;
                         }
+                        resolve(1);
+                    } catch (err) {
+                        console.warn('EXIF parse error for', file.name, err);
+                        resolve(1); // Graceful fallback — treat as no rotation
                     }
-                    resolve(1);
                 };
                 reader.onerror = () => resolve(1);
                 // Only read first 64KB — EXIF is always at the start
@@ -1516,77 +1531,119 @@
         }
 
         function applyExifOrientation(img, orientation) {
-            // Returns a new canvas with the image correctly oriented
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
+            // Returns the corrected canvas directly (no intermediate Image to avoid loading issues)
+            const c = document.createElement('canvas');
+            const cCtx = c.getContext('2d');
             const w = img.naturalWidth;
             const h = img.naturalHeight;
 
             // Orientations 5-8 swap width/height
             if (orientation >= 5 && orientation <= 8) {
-                canvas.width = h;
-                canvas.height = w;
+                c.width = h;
+                c.height = w;
             } else {
-                canvas.width = w;
-                canvas.height = h;
+                c.width = w;
+                c.height = h;
             }
 
             switch (orientation) {
-                case 2: ctx.transform(-1, 0, 0, 1, w, 0); break;       // Horizontal flip
-                case 3: ctx.transform(-1, 0, 0, -1, w, h); break;      // Rotate 180°
-                case 4: ctx.transform(1, 0, 0, -1, 0, h); break;       // Vertical flip
-                case 5: ctx.transform(0, 1, 1, 0, 0, 0); break;        // Rot 90 CW + flip
-                case 6: ctx.transform(0, 1, -1, 0, h, 0); break;       // Rotate 90° CW
-                case 7: ctx.transform(0, -1, -1, 0, h, w); break;      // Rot 90 CCW + flip
-                case 8: ctx.transform(0, -1, 1, 0, 0, w); break;       // Rotate 90° CCW
+                case 2: cCtx.transform(-1, 0, 0, 1, w, 0); break;       // Horizontal flip
+                case 3: cCtx.transform(-1, 0, 0, -1, w, h); break;      // Rotate 180°
+                case 4: cCtx.transform(1, 0, 0, -1, 0, h); break;       // Vertical flip
+                case 5: cCtx.transform(0, 1, 1, 0, 0, 0); break;        // Rot 90 CW + flip
+                case 6: cCtx.transform(0, 1, -1, 0, h, 0); break;       // Rotate 90° CW
+                case 7: cCtx.transform(0, -1, -1, 0, h, w); break;      // Rot 90 CCW + flip
+                case 8: cCtx.transform(0, -1, 1, 0, 0, w); break;       // Rotate 90° CCW
                 default: break; // orientation 1 — no transform
             }
 
-            ctx.drawImage(img, 0, 0);
+            cCtx.drawImage(img, 0, 0);
 
-            // Create a new image from the corrected canvas
-            const correctedImg = new Image();
-            correctedImg.src = canvas.toDataURL('image/jpeg', 0.95);
-            return { correctedImg, correctedCanvas: canvas, width: canvas.width, height: canvas.height };
+            // Return canvas directly — it can be drawn to other canvases without needing Image.onload
+            return { correctedCanvas: c, width: c.width, height: c.height };
         }
 
         // ───── IMAGE LOADING (with EXIF support) ─────
         function loadImageFile(file) {
-            return new Promise(async (resolve) => {
-                const orientation = await getExifOrientation(file);
+            return new Promise(async (resolve, reject) => {
+                // Timeout safety — never hang more than 30s per image
+                const timeout = setTimeout(() => {
+                    console.warn('Image load timeout for', file.name, '— loading without EXIF correction');
+                    resolveWithFallback();
+                }, 30000);
+
+                let resolved = false;
+                function safeResolve(result) {
+                    if (resolved) return;
+                    resolved = true;
+                    clearTimeout(timeout);
+                    resolve(result);
+                }
+
+                // Fallback: load as simple image without EXIF
+                function resolveWithFallback() {
+                    if (resolved) return;
+                    const fallbackImg = new Image();
+                    fallbackImg.onload = () => safeResolve({
+                        file, name: file.name,
+                        dataUrl: fallbackImg.src,
+                        width: fallbackImg.naturalWidth, height: fallbackImg.naturalHeight,
+                        img: fallbackImg, exifOrientation: 1
+                    });
+                    fallbackImg.onerror = () => {
+                        console.error('Complete image load failure for', file.name);
+                        safeResolve(null); // Will be filtered out
+                    };
+                    fallbackImg.src = URL.createObjectURL(file);
+                }
+
+                let orientation = 1;
+                try {
+                    orientation = await getExifOrientation(file);
+                } catch (e) {
+                    console.warn('EXIF read failed for', file.name, e);
+                    orientation = 1;
+                }
+
                 const reader = new FileReader();
+                reader.onerror = () => {
+                    console.warn('FileReader failed for', file.name);
+                    resolveWithFallback();
+                };
                 reader.onload = (e) => {
                     const img = new Image();
+                    img.onerror = () => {
+                        console.warn('Image decode failed for', file.name);
+                        resolveWithFallback();
+                    };
                     img.onload = () => {
-                        if (orientation > 1) {
-                            // Apply EXIF correction
-                            const { correctedImg, width, height } = applyExifOrientation(img, orientation);
-                            let resolved = false; // Guard against double-resolve
-                            const doResolve = () => {
-                                if (resolved) return;
-                                resolved = true;
-                                resolve({
-                                    file,
-                                    name: file.name,
-                                    dataUrl: correctedImg.src,
-                                    width: width,
-                                    height: height,
-                                    img: correctedImg,
+                        try {
+                            if (orientation > 1) {
+                                // Apply EXIF correction — returns canvas directly, no Image.onload needed
+                                const { correctedCanvas, width, height } = applyExifOrientation(img, orientation);
+                                safeResolve({
+                                    file, name: file.name,
+                                    dataUrl: e.target.result,
+                                    width: width, height: height,
+                                    img: correctedCanvas, // Canvas is drawable directly
                                     exifOrientation: orientation
                                 });
-                            };
-                            correctedImg.onload = doResolve;
-                            // If already loaded (data URL is sync for small images)
-                            if (correctedImg.complete && correctedImg.naturalWidth > 0) {
-                                doResolve();
+                            } else {
+                                safeResolve({
+                                    file, name: file.name,
+                                    dataUrl: e.target.result,
+                                    width: img.naturalWidth, height: img.naturalHeight,
+                                    img,
+                                    exifOrientation: 1
+                                });
                             }
-                        } else {
-                            resolve({
-                                file,
-                                name: file.name,
+                        } catch (err) {
+                            console.warn('EXIF correction failed for', file.name, err);
+                            // Fall back to uncorrected image
+                            safeResolve({
+                                file, name: file.name,
                                 dataUrl: e.target.result,
-                                width: img.naturalWidth,
-                                height: img.naturalHeight,
+                                width: img.naturalWidth, height: img.naturalHeight,
                                 img,
                                 exifOrientation: 1
                             });
@@ -1606,7 +1663,18 @@
             }
 
             showToast(`Loading ${imageFiles.length} images... (checking EXIF)`, 'info');
-            const loaded = await Promise.all(imageFiles.map(loadImageFile));
+            const rawLoaded = await Promise.all(imageFiles.map(loadImageFile));
+            const loaded = rawLoaded.filter(img => img !== null); // Filter out failed loads
+
+            if (loaded.length < rawLoaded.length) {
+                const failed = rawLoaded.length - loaded.length;
+                showToast(`${failed} image(s) could not be loaded.`, 'warning');
+            }
+
+            if (loaded.length === 0) {
+                showToast('No images could be loaded. Check file formats.', 'error');
+                return;
+            }
 
             if (append) {
                 state.images.push(...loaded);
