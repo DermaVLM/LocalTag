@@ -68,7 +68,7 @@
         /* ========== LAYOUT ========== */
         .app {
             display: grid;
-            grid-template-rows: auto 1fr auto;
+            grid-template-rows: auto auto auto 1fr auto;
             height: 100vh;
         }
 
@@ -248,11 +248,8 @@
         /* ========== CANVAS AREA ========== */
         .canvas-area {
             position: relative;
-            overflow: hidden;
+            overflow: auto;
             background: var(--bg-primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
             min-height: 0;
             min-width: 0;
             height: 100%;
@@ -260,7 +257,13 @@
 
         .canvas-wrapper {
             position: relative;
-            display: inline-block;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 100%;
+            min-height: 100%;
+            width: max-content;
+            height: max-content;
         }
 
         #imageCanvas {
@@ -860,12 +863,13 @@
 
         /* ========== ZOOM CONTROLS ========== */
         .zoom-controls {
-            position: absolute;
+            position: sticky;
             bottom: 16px;
             left: 16px;
-            display: flex;
+            display: inline-flex;
             gap: 4px;
             z-index: 50;
+            margin-top: -48px; /* Pull it up if content is small */
         }
 
         .zoom-btn {
@@ -915,9 +919,9 @@
         /* ========== CROSSHAIR CURSOR OVERLAY ========== */
         .crosshair-h,
         .crosshair-v {
-            position: absolute;
+            position: fixed;
             pointer-events: none;
-            z-index: 20;
+            z-index: 200;
             display: none;
         }
 
@@ -1093,13 +1097,14 @@
 
         /* ========== RESPONSIVE ========== */
         @media (max-width: 900px) {
-            .main-content {
+            .main-content,
+            .main-content.gallery-visible {
                 grid-template-columns: 1fr;
             }
 
             .sidebar,
             .gallery-panel {
-                display: none;
+                display: none !important;
             }
         }
     </style>
@@ -1715,6 +1720,7 @@
             canvasWrapper.style.display = 'block';
             $('zoomControls').style.display = 'flex';
             $('galleryPanel').style.display = 'flex';
+            document.querySelector('.main-content').classList.add('gallery-visible');
 
             let msg = `${loaded.length} images loaded. Total: ${state.images.length}`;
             if (exifCorrected > 0) msg += ` (${exifCorrected} EXIF corrected)`;
@@ -1967,9 +1973,8 @@
             const pos = getCanvasPos(e);
 
             // Update crosshairs
-            const areaRect = canvasArea.getBoundingClientRect();
-            $('crosshairH').style.top = (e.clientY - areaRect.top) + 'px';
-            $('crosshairV').style.left = (e.clientX - areaRect.left) + 'px';
+            $('crosshairH').style.top = e.clientY + 'px';
+            $('crosshairV').style.left = e.clientX + 'px';
 
             // Update status coords
             const realX = Math.round(pos.x / state.zoom);
