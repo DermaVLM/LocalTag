@@ -1159,6 +1159,7 @@
         <!-- SHORTCUT BAR -->
         <div class="tooltip-bar" id="tooltipBar">
             <span class="shortcut"><span class="kbd">Drag</span> Draw box</span>
+            <span class="shortcut"><span class="kbd">Right-Click Drag</span> Pan</span>
             <span class="shortcut"><span class="kbd">Del</span> Delete</span>
             <span class="shortcut"><span class="kbd">⌘Z</span> Undo</span>
             <span class="shortcut"><span class="kbd">A/D</span> Prev/Next</span>
@@ -1215,6 +1216,7 @@
                     <span class="zoom-level" id="zoomLevel">100%</span>
                     <button class="zoom-btn" id="btnZoomIn" title="Zoom in">+</button>
                     <button class="zoom-btn" id="btnZoomFit" title="Fit">⊝</button>
+                    <button class="zoom-btn" id="btnCenter" title="Center Image">⌖</button>
                 </div>
             </div>
 
@@ -1348,6 +1350,9 @@
             drawCurrent: null,
             zoom: 1,
             pan: { x: 0, y: 0 },
+            isPanning: false,
+            panStart: { x: 0, y: 0 },
+            scrollStart: { left: 0, top: 0 },
             imageFilter: 'all',   // 'all' | 'labeled' | 'unlabeled'
             _savedCurrentIndex: -1, // stored index from session for restore
         };
@@ -1869,6 +1874,39 @@
             };
         }
 
+        // ───── PANNING LOGIC ─────
+        canvasArea.addEventListener('mousedown', (e) => {
+            // Middle click (1), Right click (2), or Shift + Left click
+            if (e.button === 1 || e.button === 2 || (e.button === 0 && e.shiftKey)) {
+                e.preventDefault();
+                state.isPanning = true;
+                state.panStart = { x: e.clientX, y: e.clientY };
+                state.scrollStart = { left: canvasArea.scrollLeft, top: canvasArea.scrollTop };
+                canvasArea.style.cursor = 'grabbing';
+            }
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (state.isPanning) {
+                const dx = e.clientX - state.panStart.x;
+                const dy = e.clientY - state.panStart.y;
+                canvasArea.scrollLeft = state.scrollStart.left - dx;
+                canvasArea.scrollTop = state.scrollStart.top - dy;
+            }
+        });
+
+        window.addEventListener('mouseup', (e) => {
+            if (state.isPanning) {
+                state.isPanning = false;
+                canvasArea.style.cursor = '';
+            }
+        });
+
+        canvasArea.addEventListener('contextmenu', e => {
+            // Prevent context menu to allow right-click panning
+            e.preventDefault();
+        });
+
         // ───── RESIZE HANDLE DETECTION ─────
         function getResizeHandle(pos) {
             if (state.selectedAnnotation < 0) return null;
@@ -1914,6 +1952,9 @@
         }
 
         canvas.addEventListener('mousedown', (e) => {
+            if (e.button === 1 || e.button === 2 || (e.button === 0 && e.shiftKey)) {
+                return; // Handled by canvasArea panning
+            }
             if (e.button !== 0) return;
             if (state.classes.length === 0) {
                 showToast('Please add at least one class first!', 'warning');
@@ -2398,6 +2439,13 @@
         $('btnZoomIn').addEventListener('click', () => zoomTo(state.zoom * 1.15));
         $('btnZoomOut').addEventListener('click', () => zoomTo(state.zoom / 1.15));
         $('btnZoomFit').addEventListener('click', () => renderCurrentImage());
+        $('btnCenter').addEventListener('click', () => {
+            if (state.currentIndex < 0) return;
+            const ca = $('canvasArea');
+            ca.scrollLeft = (ca.scrollWidth - ca.clientWidth) / 2;
+            ca.scrollTop = (ca.scrollHeight - ca.clientHeight) / 2;
+            showToast('Image centered', 'success');
+        });
 
         // Mouse wheel zoom
         canvasArea.addEventListener('wheel', (e) => {
